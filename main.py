@@ -56,42 +56,46 @@ class Interpreter:
         self.output = []
 
     def run(self, s):
-        while True:
-            if s == "skip":
-                return
-            if not isinstance(s, dict) or len(s) != 1:
-                raise InterpreterError(f"unknown statement: {json.dumps(s)}")
-            (kind, arg), = s.items()
-
-            if kind == "seq":
-                self.run(arg["left"])
-                s = arg["right"]
-                continue
-
-            if kind == "assn":
-                self.state[arg["dst"]] = eval_expr(arg["src"], self.state)
-            elif kind == "read":
-                if self.pos >= len(self.inputs):
-                    raise InterpreterError("input is exhausted")
-                self.state[arg] = self.inputs[self.pos]
-                self.pos += 1
-            elif kind == "write":
-                self.output.append(eval_expr(arg, self.state))
-            elif kind == "if":
-                cond = eval_expr(arg["cond"], self.state)
-                s = arg["then"] if cond != 0 else arg["else"]
-                continue
-            elif kind == "while":
-                while eval_expr(arg["cond"], self.state) != 0:
-                    self.run(arg["body"])
-            elif kind == "do":
-                while True:
-                    self.run(arg["body"])
-                    if eval_expr(arg["cond"], self.state) == 0:
-                        break
-            else:
-                raise InterpreterError(f"unknown statement: {kind}")
+        if s == "skip":
             return
+        if not isinstance(s, dict) or len(s) != 1:
+            raise InterpreterError(f"unknown statement: {json.dumps(s)}")
+        (kind, arg), = s.items()
+
+        if kind == "assn":
+            self.state[arg["dst"]] = eval_expr(arg["src"], self.state)
+
+        elif kind == "read":
+            if self.pos >= len(self.inputs):
+                raise InterpreterError("input is exhausted")
+            self.state[arg] = self.inputs[self.pos]
+            self.pos += 1
+
+        elif kind == "write":
+            self.output.append(eval_expr(arg, self.state))
+
+        elif kind == "seq":
+            self.run(arg["left"])
+            self.run(arg["right"])
+
+        elif kind == "if":
+            if eval_expr(arg["cond"], self.state) != 0:
+                self.run(arg["then"])
+            else:
+                self.run(arg["else"])
+
+        elif kind == "while":
+            while eval_expr(arg["cond"], self.state) != 0:
+                self.run(arg["body"])
+
+        elif kind == "do":
+            while True:
+                self.run(arg["body"])
+                if eval_expr(arg["cond"], self.state) == 0:
+                    break
+
+        else:
+            raise InterpreterError(f"unknown statement: {kind}")
 
 def parse_input(text):
     try:
