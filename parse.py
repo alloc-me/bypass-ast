@@ -8,7 +8,7 @@ class ParseError(Exception):
 KEYWORDS = {"read", "write", "skip", "while", "do", "for", "if", "else", "elif"}
 
 OPERATORS = ["!!", "&&", "==", "!=", "<=", ">=", "<", ">", "+", "-", "*", "/", "%", "="]
-PUNCT = "(){};"
+PUNCT = "(){};[],."
 
 CONST_RE = re.compile(r"[0-9]+")
 IDENT_RE = re.compile(r"[a-z][a-zA-Z_'0-9]*")
@@ -31,6 +31,12 @@ def tokenize(text):
         elif text.startswith("--", i):
             end = text.find("\n", i)
             i = len(text) if end < 0 else end + 1
+        elif text[i] == '"':
+            end = text.find('"', i + 1)
+            if end < 0:
+                raise ParseError("unterminated string literal")
+            tokens.append(("string", text[i + 1:end]))
+            i = end + 1
         elif text.startswith("(*", i):
             end = text.find("*)", i + 2)
             if end < 0:
@@ -103,7 +109,6 @@ class Parser:
         stmts = []
         while not self.at("}") and not self.at("eof"):
             stmts.append(self.parse_stmt())
-            self.accept(";")
         if not stmts:
             raise ParseError("at least one statement expected")
         return seq(stmts)
@@ -117,32 +122,45 @@ class Parser:
         if self.at("keyword"):
             return self.parse_keyword_stmt(self.peek()[1])
 
-        name = self.expect("ident")[1]
+        target = self.parse_primary()
         if self.accept("op", "="):
-            return {"assn": {"dst": name, "src": self.parse_expr()}}
+            value = self.parse_expr()
+            self.accept(";")
+            return self.make_assign(target, value)
         if self.at("op") and self.peek(1) == ("op", "="):
             op = self.peek()[1]
             self.pos += 2
-            src = {"binop": op, "left": {"var": name}, "right": self.parse_expr()}
-            return {"assn": {"dst": name, "src": src}}
-        raise ParseError(f"'=' expected after {name!r}")
+            value = {"binop": op, "left": target, "right": self.parse_expr()}
+            self.accept(";")
+            return self.make_assign(target, value)
+        raise ParseError(f"'=' expected, got {self.peek()[1] or 'end of program'!r}")
+
+    def make_assign(self, target, value):
+        if "var" in target:
+            return {"assn": {"dst": target["var"], "src": value}}
+        if "elem" in target:
+            return {"set": {"dst": target["elem"], "idx": target["index"], "value": value}}
+        raise ParseError("variable or array element expected on the left of '='")
 
     def parse_keyword_stmt(self, word):
         self.pos += 1
 
         if word == "skip":
+            self.accept(";")
             return "skip"
 
         if word == "read":
             self.expect("(")
             name = self.expect("ident")[1]
             self.expect(")")
+            self.accept(";")
             return {"read": name}
 
         if word == "write":
             self.expect("(")
             expr = self.parse_expr()
             self.expect(")")
+            self.accept(";")
             return {"write": expr}
 
         if word == "while":
@@ -151,14 +169,14 @@ class Parser:
 
         if word == "do":
             body = self.parse_stmt()
-            self.accept(";")
             self.expect("keyword", "while")
-            return {"do": {"body": body, "cond": self.parse_paren_expr()}}
+            cond = self.parse_paren_expr()
+            self.accept(";")
+            return {"do": {"body": body, "cond": cond}}
 
         if word == "for":
             self.expect("(")
             init = self.parse_stmt()
-            self.accept(";")
             cond = self.parse_expr()
             self.expect(";")
             step = self.parse_stmt()
@@ -174,8 +192,6 @@ class Parser:
         raise ParseError(f"unexpected keyword {word!r}")
 
     def parse_else(self):
-        if self.at(";") and self.peek(1)[0] == "keyword" and self.peek(1)[1] in ("else", "elif"):
-            self.pos += 1
         if self.accept("keyword", "else"):
             return self.parse_stmt()
         if self.accept("keyword", "elif"):
@@ -201,10 +217,33 @@ class Parser:
         return node
 
     def parse_primary(self):
+        node = self.parse_atom()
+        while True:
+            if self.accept("["):
+                index = self.parse_expr()
+                self.expect("]")
+                node = {"elem": node, "index": index}
+            elif self.accept("."):
+                self.expect("ident", "length")
+                node = {"length": node}
+            else:
+                return node
+
+    def parse_atom(self):
         if self.at("const"):
             return {"const": self.accept("const")[1]}
+        if self.at("string"):
+            return {"string": self.accept("string")[1]}
         if self.at("ident"):
             return {"var": self.accept("ident")[1]}
+        if self.accept("["):
+            items = []
+            if not self.at("]"):
+                items.append(self.parse_expr())
+                while self.accept(","):
+                    items.append(self.parse_expr())
+            self.expect("]")
+            return {"array": items}
         if self.accept("("):
             expr = self.parse_expr()
             self.expect(")")
