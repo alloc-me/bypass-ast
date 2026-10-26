@@ -1,7 +1,7 @@
 import json
 import sys
 
-from parse import ParseError, Parser, tokenize
+from main import InterpreterError
 
 
 class Compiler:
@@ -17,6 +17,17 @@ class Compiler:
             return [{"CONST": e["const"]}]
         if "var" in e:
             return [{"LD": e["var"]}]
+        if "string" in e:
+            return [{"STRING": e["string"]}]
+        if "array" in e:
+            code = []
+            for item in e["array"]:
+                code += self.expr(item)
+            return code + [{"ARRAY": len(e["array"])}]
+        if "elem" in e:
+            return self.expr(e["elem"]) + self.expr(e["index"]) + ["ELEM"]
+        if "length" in e:
+            return self.expr(e["length"]) + ["LENGTH"]
         return self.expr(e["left"]) + self.expr(e["right"]) + [{"BINOP": e["binop"]}]
 
     def stmt(self, s):
@@ -30,6 +41,11 @@ class Compiler:
             return self.expr(arg) + ["WRITE"]
         if kind == "assn":
             return self.expr(arg["src"]) + [{"ST": arg["dst"]}]
+        if kind == "set":
+            return (self.expr(arg["dst"])
+                    + self.expr(arg["idx"])
+                    + self.expr(arg["value"])
+                    + ["SET"])
         if kind == "seq":
             return self.stmt(arg["left"]) + self.stmt(arg["right"])
 
@@ -61,24 +77,23 @@ class Compiler:
                     + self.expr(arg["cond"])
                     + [{"JNZ": body}])
 
-        raise ParseError(f"unknown statement {kind!r}")
+        raise InterpreterError(f"unknown statement {kind!r}")
 
 
 def main():
     if len(sys.argv) < 2:
-        print("usage: python3 compiler.py program.txt [--sm]", file=sys.stderr)
+        print("usage: python3 compiler.py program.json", file=sys.stderr)
         return 1
     with open(sys.argv[1], encoding="utf-8") as f:
-        text = f.read()
+        ast = json.load(f)
 
     try:
-        ast = Parser(tokenize(text)).parse_program()
-    except ParseError as ex:
-        print(f"Input error: {ex}", file=sys.stderr)
+        code = Compiler().stmt(ast)
+    except InterpreterError as ex:
+        print(f"Error: {ex}", file=sys.stderr)
         return 1
 
-    result = Compiler().stmt(ast) if "--sm" in sys.argv[2:] else ast
-    print(json.dumps(result, indent=2))
+    print(json.dumps(code, indent=2))
     return 0
 
 if __name__ == "__main__":

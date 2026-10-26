@@ -164,7 +164,9 @@ def parse_input(text):
     return values
 
 def read_values(tokens, values):
-    while tokens and tokens[0] not in ("]", ",", ";"):
+    while tokens and tokens[0] != "]":
+        if values and tokens[0] in (",", ";"):
+            tokens = tokens[1:]
         value, tokens = read_value(tokens)
         values.append(value)
     return tokens

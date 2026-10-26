@@ -1,0 +1,902 @@
+{
+  "seq": {
+    "left": { "read": "expr" },
+    "right": {
+      "seq": {
+        "left": { "read": "state" },
+        "right": {
+          "seq": {
+            "left": {
+              "assn": {
+                "dst": "work",
+                "src": {
+                  "array": [
+                    { "array": [ { "const": 0 }, { "var": "expr" } ] },
+                    { "const": 0 }
+                  ]
+                }
+              }
+            },
+            "right": {
+              "seq": {
+                "left": { "assn": { "dst": "size", "src": { "const": 1 } } },
+                "right": {
+                  "seq": {
+                    "left": {
+                      "assn": { "dst": "vals", "src": { "const": 0 } }
+                    },
+                    "right": {
+                      "seq": {
+                        "left": {
+                          "while": {
+                            "cond": {
+                              "binop": ">",
+                              "left": { "var": "size" },
+                              "right": { "const": 0 }
+                            },
+                            "body": {
+                              "seq": {
+                                "left": {
+                                  "assn": {
+                                    "dst": "task",
+                                    "src": {
+                                      "elem": { "var": "work" },
+                                      "index": { "const": 0 }
+                                    }
+                                  }
+                                },
+                                "right": {
+                                  "seq": {
+                                    "left": {
+                                      "assn": {
+                                        "dst": "work",
+                                        "src": {
+                                          "elem": { "var": "work" },
+                                          "index": { "const": 1 }
+                                        }
+                                      }
+                                    },
+                                    "right": {
+                                      "seq": {
+                                        "left": {
+                                          "assn": {
+                                            "dst": "size",
+                                            "src": {
+                                              "binop": "-",
+                                              "left": { "var": "size" },
+                                              "right": { "const": 1 }
+                                            }
+                                          }
+                                        },
+                                        "right": {
+                                          "if": {
+                                            "cond": {
+                                              "binop": "==",
+                                              "left": {
+                                                "elem": { "var": "task" },
+                                                "index": { "const": 0 }
+                                              },
+                                              "right": { "const": 0 }
+                                            },
+                                            "then": {
+                                              "seq": {
+                                                "left": {
+                                                  "assn": {
+                                                    "dst": "node",
+                                                    "src": {
+                                                      "elem": {
+                                                        "var": "task"
+                                                      },
+                                                      "index": { "const": 1 }
+                                                    }
+                                                  }
+                                                },
+                                                "right": {
+                                                  "if": {
+                                                    "cond": {
+                                                      "binop": "==",
+                                                      "left": {
+                                                        "elem": {
+                                                          "var": "node"
+                                                        },
+                                                        "index": {
+                                                          "const": 0
+                                                        }
+                                                      },
+                                                      "right": { "const": 0 }
+                                                    },
+                                                    "then": {
+                                                      "assn": {
+                                                        "dst": "vals",
+                                                        "src": {
+                                                          "array": [
+                                                            {
+                                                              "elem": {
+                                                                "var": "node"
+                                                              },
+                                                              "index": {
+                                                                "const": 1
+                                                              }
+                                                            },
+                                                            { "var": "vals" }
+                                                          ]
+                                                        }
+                                                      }
+                                                    },
+                                                    "else": {
+                                                      "if": {
+                                                        "cond": {
+                                                          "binop": "==",
+                                                          "left": {
+                                                            "elem": {
+                                                              "var": "node"
+                                                            },
+                                                            "index": {
+                                                              "const": 0
+                                                            }
+                                                          },
+                                                          "right": {
+                                                            "const": 1
+                                                          }
+                                                        },
+                                                        "then": {
+                                                          "seq": {
+                                                            "left": {
+                                                              "assn": {
+                                                                "dst": "name",
+                                                                "src": {
+                                                                  "elem": {
+                                                                    "var": "node"
+                                                                  },
+                                                                  "index": {
+                                                                    "const": 1
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            "right": {
+                                                              "seq": {
+                                                                "left": {
+                                                                  "assn": {
+                                                                    "dst": "cur",
+                                                                    "src": {
+                                                                    "var": "state"
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "right": {
+                                                                  "seq": {
+                                                                    "left": {
+                                                                    "assn": {
+                                                                    "dst": "found",
+                                                                    "src": {
+                                                                    "const": 0
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "seq": {
+                                                                    "left": {
+                                                                    "assn": {
+                                                                    "dst": "value",
+                                                                    "src": {
+                                                                    "const": 0
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "seq": {
+                                                                    "left": {
+                                                                    "while": {
+                                                                    "cond": {
+                                                                    "binop": "&&",
+                                                                    "left": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "elem": {
+                                                                    "var": "cur"
+                                                                    },
+                                                                    "index": {
+                                                                    "const": 0
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "const": 1
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "found"
+                                                                    },
+                                                                    "right": {
+                                                                    "const": 0
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "body": {
+                                                                    "seq": {
+                                                                    "left": {
+                                                                    "assn": {
+                                                                    "dst": "pair",
+                                                                    "src": {
+                                                                    "elem": {
+                                                                    "var": "cur"
+                                                                    },
+                                                                    "index": {
+                                                                    "const": 1
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "seq": {
+                                                                    "left": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "elem": {
+                                                                    "var": "pair"
+                                                                    },
+                                                                    "index": {
+                                                                    "const": 0
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "name"
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "seq": {
+                                                                    "left": {
+                                                                    "assn": {
+                                                                    "dst": "value",
+                                                                    "src": {
+                                                                    "elem": {
+                                                                    "var": "pair"
+                                                                    },
+                                                                    "index": {
+                                                                    "const": 1
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "assn": {
+                                                                    "dst": "found",
+                                                                    "src": {
+                                                                    "const": 1
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": "skip"
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "assn": {
+                                                                    "dst": "cur",
+                                                                    "src": {
+                                                                    "elem": {
+                                                                    "var": "cur"
+                                                                    },
+                                                                    "index": {
+                                                                    "const": 2
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "assn": {
+                                                                    "dst": "vals",
+                                                                    "src": {
+                                                                    "array": [
+                                                                    {
+                                                                    "var": "value"
+                                                                    },
+                                                                    {
+                                                                    "var": "vals"
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "else": {
+                                                          "seq": {
+                                                            "left": {
+                                                              "assn": {
+                                                                "dst": "work",
+                                                                "src": {
+                                                                  "array": [
+                                                                    {
+                                                                    "array": [
+                                                                    {
+                                                                    "const": 1
+                                                                    },
+                                                                    {
+                                                                    "elem": {
+                                                                    "var": "node"
+                                                                    },
+                                                                    "index": {
+                                                                    "const": 1
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    },
+                                                                    {
+                                                                    "var": "work"
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              }
+                                                            },
+                                                            "right": {
+                                                              "seq": {
+                                                                "left": {
+                                                                  "assn": {
+                                                                    "dst": "work",
+                                                                    "src": {
+                                                                    "array": [
+                                                                    {
+                                                                    "array": [
+                                                                    {
+                                                                    "const": 0
+                                                                    },
+                                                                    {
+                                                                    "elem": {
+                                                                    "var": "node"
+                                                                    },
+                                                                    "index": {
+                                                                    "const": 3
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    },
+                                                                    {
+                                                                    "var": "work"
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "right": {
+                                                                  "seq": {
+                                                                    "left": {
+                                                                    "assn": {
+                                                                    "dst": "work",
+                                                                    "src": {
+                                                                    "array": [
+                                                                    {
+                                                                    "array": [
+                                                                    {
+                                                                    "const": 0
+                                                                    },
+                                                                    {
+                                                                    "elem": {
+                                                                    "var": "node"
+                                                                    },
+                                                                    "index": {
+                                                                    "const": 2
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    },
+                                                                    {
+                                                                    "var": "work"
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "assn": {
+                                                                    "dst": "size",
+                                                                    "src": {
+                                                                    "binop": "+",
+                                                                    "left": {
+                                                                    "var": "size"
+                                                                    },
+                                                                    "right": {
+                                                                    "const": 3
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "else": {
+                                              "seq": {
+                                                "left": {
+                                                  "assn": {
+                                                    "dst": "op",
+                                                    "src": {
+                                                      "elem": {
+                                                        "var": "task"
+                                                      },
+                                                      "index": { "const": 1 }
+                                                    }
+                                                  }
+                                                },
+                                                "right": {
+                                                  "seq": {
+                                                    "left": {
+                                                      "assn": {
+                                                        "dst": "right",
+                                                        "src": {
+                                                          "elem": {
+                                                            "var": "vals"
+                                                          },
+                                                          "index": {
+                                                            "const": 0
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "right": {
+                                                      "seq": {
+                                                        "left": {
+                                                          "assn": {
+                                                            "dst": "vals",
+                                                            "src": {
+                                                              "elem": {
+                                                                "var": "vals"
+                                                              },
+                                                              "index": {
+                                                                "const": 1
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "right": {
+                                                          "seq": {
+                                                            "left": {
+                                                              "assn": {
+                                                                "dst": "left",
+                                                                "src": {
+                                                                  "elem": {
+                                                                    "var": "vals"
+                                                                  },
+                                                                  "index": {
+                                                                    "const": 0
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            "right": {
+                                                              "seq": {
+                                                                "left": {
+                                                                  "assn": {
+                                                                    "dst": "vals",
+                                                                    "src": {
+                                                                    "elem": {
+                                                                    "var": "vals"
+                                                                    },
+                                                                    "index": {
+                                                                    "const": 1
+                                                                    }
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "right": {
+                                                                  "seq": {
+                                                                    "left": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "+"
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "+",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "-"
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "-",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "*"
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "*",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "/"
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "/",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "%"
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "%",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "=="
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "!="
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "!=",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "<"
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "<",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "<="
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "<=",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": ">"
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": ">",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": ">="
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": ">=",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "if": {
+                                                                    "cond": {
+                                                                    "binop": "==",
+                                                                    "left": {
+                                                                    "var": "op"
+                                                                    },
+                                                                    "right": {
+                                                                    "string": "&&"
+                                                                    }
+                                                                    },
+                                                                    "then": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "&&",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "else": {
+                                                                    "assn": {
+                                                                    "dst": "res",
+                                                                    "src": {
+                                                                    "binop": "!!",
+                                                                    "left": {
+                                                                    "var": "left"
+                                                                    },
+                                                                    "right": {
+                                                                    "var": "right"
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                    },
+                                                                    "right": {
+                                                                    "assn": {
+                                                                    "dst": "vals",
+                                                                    "src": {
+                                                                    "array": [
+                                                                    {
+                                                                    "var": "res"
+                                                                    },
+                                                                    {
+                                                                    "var": "vals"
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "right": {
+                          "write": {
+                            "elem": { "var": "vals" },
+                            "index": { "const": 0 }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,8 @@
 import json
 import sys
 
-from main import BINOPS, InterpreterError, parse_input
+from main import (ARITH_OPS, BINOPS, InterpreterError, String,
+                  check_array, check_index, check_int, format_value, parse_input)
 
 
 def normalize(instr):
@@ -60,13 +61,36 @@ class StackMachine:
                 self.stack.append(self.inputs[self.pos])
                 self.pos += 1
             elif op == "WRITE":
-                self.output.append(self.pop(op))
+                self.output.append(format_value(self.pop(op)))
             elif op == "BINOP":
                 if arg not in BINOPS:
                     raise InterpreterError(f"unknown operator {arg}")
                 right = self.pop(op)
                 left = self.pop(op)
+                if arg in ARITH_OPS:
+                    check_int(right)
+                    check_int(left)
                 self.stack.append(BINOPS[arg](left, right))
+            elif op == "ARRAY":
+                size = int(arg)
+                if size > len(self.stack):
+                    raise InterpreterError(f"stack underflow at {op}")
+                items = self.stack[len(self.stack) - size:]
+                del self.stack[len(self.stack) - size:]
+                self.stack.append(items)
+            elif op == "STRING":
+                self.stack.append(String(map(ord, arg)))
+            elif op == "LENGTH":
+                self.stack.append(len(check_array(self.pop(op))))
+            elif op == "ELEM":
+                index = self.pop(op)
+                array = check_array(self.pop(op))
+                self.stack.append(array[check_index(array, index)])
+            elif op == "SET":
+                value = self.pop(op)
+                index = self.pop(op)
+                array = check_array(self.pop(op))
+                array[check_index(array, index)] = value
             elif op == "JMP":
                 pc = target(arg, op)
             elif op == "JZ":
@@ -93,7 +117,7 @@ def main():
     except InterpreterError as ex:
         print(f"Error: {ex}", file=sys.stderr)
         return 1
-    print("; ".join(map(str, m.output)))
+    print("; ".join(m.output))
     return 0
 
 
