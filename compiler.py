@@ -1,7 +1,7 @@
 import json
 import sys
 
-from main import InterpreterError
+from values import CompilerError, LanguageError
 
 
 class Compiler:
@@ -12,28 +12,28 @@ class Compiler:
         self.counter += 1
         return f"L_{kind}_{self.counter}"
 
-    def expr(self, e):
-        if "const" in e:
-            return [{"CONST": e["const"]}]
-        if "var" in e:
-            return [{"LD": e["var"]}]
-        if "string" in e:
-            return [{"STRING": e["string"]}]
-        if "array" in e:
+    def expr(self, expression):
+        if "const" in expression:
+            return [{"CONST": expression["const"]}]
+        if "var" in expression:
+            return [{"LD": expression["var"]}]
+        if "string" in expression:
+            return [{"STRING": expression["string"]}]
+        if "array" in expression:
             code = []
-            for item in e["array"]:
+            for item in expression["array"]:
                 code += self.expr(item)
-            return code + [{"ARRAY": len(e["array"])}]
-        if "elem" in e:
-            return self.expr(e["elem"]) + self.expr(e["index"]) + ["ELEM"]
-        if "length" in e:
-            return self.expr(e["length"]) + ["LENGTH"]
-        return self.expr(e["left"]) + self.expr(e["right"]) + [{"BINOP": e["binop"]}]
+            return code + [{"ARRAY": len(expression["array"])}]
+        if "elem" in expression:
+            return self.expr(expression["elem"]) + self.expr(expression["index"]) + ["ELEM"]
+        if "length" in expression:
+            return self.expr(expression["length"]) + ["LENGTH"]
+        return self.expr(expression["left"]) + self.expr(expression["right"]) + [{"BINOP": expression["binop"]}]
 
-    def stmt(self, s):
-        if s == "skip":
+    def stmt(self, statement):
+        if statement == "skip":
             return []
-        (kind, arg), = s.items()
+        [(kind, arg)] = statement.items()
 
         if kind == "read":
             return ["READ", {"ST": arg}]
@@ -51,11 +51,11 @@ class Compiler:
 
         if kind == "if":
             end = self.label("seq")
-            els = self.label("else")
+            else_label = self.label("else")
             return (self.expr(arg["cond"])
-                    + [{"JZ": els}]
+                    + [{"JZ": else_label}]
                     + self.stmt(arg["then"])
-                    + [{"JMP": end}, {"LABEL": els}]
+                    + [{"JMP": end}, {"LABEL": else_label}]
                     + self.stmt(arg["else"])
                     + [{"LABEL": end}])
 
@@ -77,7 +77,7 @@ class Compiler:
                     + self.expr(arg["cond"])
                     + [{"JNZ": body}])
 
-        raise InterpreterError(f"unknown statement {kind!r}")
+        raise CompilerError(f"unknown statement {kind!r}")
 
 
 def main():
@@ -89,7 +89,7 @@ def main():
 
     try:
         code = Compiler().stmt(ast)
-    except InterpreterError as ex:
+    except LanguageError as ex:
         print(f"Error: {ex}", file=sys.stderr)
         return 1
 
