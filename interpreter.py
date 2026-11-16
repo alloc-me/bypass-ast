@@ -3,8 +3,9 @@ import sys
 
 from input_parser import parse_input
 from values import (
-    ARITH_OPS, BINOPS, InterpreterError, LanguageError, String,
-    check_array, check_index, check_int, format_value,
+    ARITH_OPS, BINOPS, InterpreterError, LanguageError, Sexp, String,
+    bind_variables, check_array, check_index, check_int, format_value,
+    match_pattern, restore_variables,
 )
 
 
@@ -20,6 +21,8 @@ def eval_expr(expression, state):
         return String(ord(ch) for ch in expression["string"])
     if "array" in expression:
         return [eval_expr(item, state) for item in expression["array"]]
+    if "sexp" in expression:
+        return Sexp(expression["sexp"], [eval_expr(item, state) for item in expression["args"]])
     if "elem" in expression:
         array = check_array(eval_expr(expression["elem"], state))
         index = eval_expr(expression["index"], state)
@@ -89,6 +92,20 @@ class Interpreter:
                 self.run(arg["body"])
                 if eval_expr(arg["cond"], self.state) == 0:
                     break
+
+        elif kind == "switch":
+            value = eval_expr(arg["scrutinee"], self.state)
+            for branch in arg["branches"]:
+                bindings = match_pattern(branch["pattern"], value)
+                if bindings is not None:
+                    saved = bind_variables(self.state, bindings)
+                    try:
+                        self.run(branch["branch"])
+                    finally:
+                        restore_variables(self.state, saved)
+                    break
+            else:
+                raise InterpreterError(f"match failure on {format_value(value)}")
 
         else:
             raise InterpreterError(f"unknown statement: {kind}")

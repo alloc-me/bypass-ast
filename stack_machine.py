@@ -3,7 +3,7 @@ import sys
 
 from input_parser import parse_input
 from values import (
-    ARITH_OPS, BINOPS, StackMachineError, LanguageError, String,
+    ARITH_OPS, BINOPS, StackMachineError, LanguageError, Sexp, String,
     check_array, check_index, check_int, format_value,
 )
 
@@ -83,6 +83,15 @@ class StackMachine:
                 self.stack.append(items)
             elif op == "STRING":
                 self.stack.append(String(map(ord, arg)))
+            elif op == "SEXP":
+                name, size = arg
+                size = int(size)
+                if size < 0 or size > len(self.stack):
+                    raise StackMachineError(f"stack underflow at {op}")
+                start = len(self.stack) - size
+                args = self.stack[start:]
+                del self.stack[start:]
+                self.stack.append(Sexp(name, args))
             elif op == "LENGTH":
                 self.stack.append(len(check_array(self.pop(op))))
             elif op == "ELEM":

@@ -24,6 +24,11 @@ class Compiler:
             for item in expression["array"]:
                 code += self.expr(item)
             return code + [{"ARRAY": len(expression["array"])}]
+        if "sexp" in expression:
+            code = []
+            for item in expression["args"]:
+                code += self.expr(item)
+            return code + [{"SEXP": [expression["sexp"], len(expression["args"])]}]
         if "elem" in expression:
             return self.expr(expression["elem"]) + self.expr(expression["index"]) + ["ELEM"]
         if "length" in expression:
@@ -76,6 +81,9 @@ class Compiler:
                     + [{"LABEL": cond}]
                     + self.expr(arg["cond"])
                     + [{"JNZ": body}])
+
+        if kind == "switch":
+            raise CompilerError("switch is only supported by the AST interpreter")
 
         raise CompilerError(f"unknown statement {kind!r}")
 
