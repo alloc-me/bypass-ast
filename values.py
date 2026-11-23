@@ -25,8 +25,19 @@ def _mod(a, b):
         raise LanguageError("division by zero")
     return a - _div(a, b) * b
 
+
+def _add(a, b):
+    if isinstance(a, String):
+        if not isinstance(b, String):
+            check_int(b)
+        return String(list(a) + list(map(ord, format_value(b))))
+    check_int(b)
+    check_int(a)
+    return a + b
+
+
 BINOPS = {
-    "+":  lambda a, b: a + b,
+    "+":  _add,
     "-":  lambda a, b: a - b,
     "*":  lambda a, b: a * b,
     "/":  _div,
@@ -41,7 +52,8 @@ BINOPS = {
     "!!": lambda a, b: int(a != 0 or b != 0),
 }
 
-ARITH_OPS = {"+", "-", "*", "/", "%"}
+# У плюса собственная проверка: строка + строка/число либо число + число.
+ARITH_OPS = {"-", "*", "/", "%"}
 
 
 class String(list):
@@ -85,6 +97,13 @@ def check_array(value):
         raise LanguageError(f'array/string value expected but "{format_value(value)}" given')
     return value
 
+
+def get_items(value):
+    if isinstance(value, Sexp):
+        return value.args
+    return check_array(value)
+
+
 def check_index(array, index):
     check_int(index)
     if not 0 <= index < len(array):
@@ -92,18 +111,26 @@ def check_index(array, index):
     return index
 
 
+def match_type(pattern, value):
+    if pattern == "#int":
+        return isinstance(value, int)
+    if pattern == "#array":
+        return type(value) is list
+    if pattern == "#string":
+        return isinstance(value, String)
+    if pattern == "#sexp":
+        return isinstance(value, Sexp)
+    if isinstance(pattern, list) and len(pattern) == 3 and pattern[0] == "Tag":
+        return isinstance(value, Sexp) and value.name == pattern[1] and len(value.args) == pattern[2]
+    raise LanguageError(f"unknown type pattern: {pattern!r}")
+
+
 def match_pattern(pattern, value):
     if isinstance(pattern, int):
         return {} if isinstance(value, int) and value == pattern else None
     if isinstance(pattern, str):
-        if pattern == "#int":
-            matches = isinstance(value, int)
-        elif pattern == "#array":
-            matches = type(value) is list
-        elif pattern == "#string":
-            matches = isinstance(value, String)
-        elif pattern == "#sexp":
-            matches = isinstance(value, Sexp)
+        if pattern in ("#int", "#array", "#string", "#sexp"):
+            matches = match_type(pattern, value)
         else:
             matches = isinstance(value, String) and value == list(map(ord, pattern))
         return {} if matches else None

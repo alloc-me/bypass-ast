@@ -4,7 +4,7 @@ import sys
 from input_parser import parse_input
 from values import (
     ARITH_OPS, BINOPS, InterpreterError, LanguageError, Sexp, String,
-    bind_variables, check_array, check_index, check_int, format_value,
+    bind_variables, check_array, check_index, check_int, format_value, get_items,
     match_pattern, restore_variables,
 )
 
@@ -24,11 +24,11 @@ def eval_expr(expression, state):
     if "sexp" in expression:
         return Sexp(expression["sexp"], [eval_expr(item, state) for item in expression["args"]])
     if "elem" in expression:
-        array = check_array(eval_expr(expression["elem"], state))
+        array = get_items(eval_expr(expression["elem"], state))
         index = eval_expr(expression["index"], state)
         return array[check_index(array, index)]
     if "length" in expression:
-        return len(check_array(eval_expr(expression["length"], state)))
+        return len(get_items(eval_expr(expression["length"], state)))
     if "binop" in expression:
         op = expression["binop"]
         if op not in BINOPS:

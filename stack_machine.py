@@ -4,7 +4,7 @@ import sys
 from input_parser import parse_input
 from values import (
     ARITH_OPS, BINOPS, StackMachineError, LanguageError, Sexp, String,
-    check_array, check_index, check_int, format_value,
+    check_array, check_index, check_int, format_value, get_items, match_type,
 )
 
 
@@ -21,6 +21,8 @@ class StackMachine:
     def __init__(self, inputs):
         self.stack = []
         self.state = {}
+        self.scopes = [self.state]
+        self.pending_scopes = []
         self.inputs = list(inputs)
         self.pos = 0
         self.output = []
@@ -29,6 +31,19 @@ class StackMachine:
         if not self.stack:
             raise StackMachineError(f"stack underflow at {op}")
         return self.stack.pop()
+
+    def load(self, name):
+        for scope in reversed(self.scopes):
+            if name in scope:
+                return scope[name]
+        raise StackMachineError(f"undefined variable {name}")
+
+    def store(self, name, value):
+        for scope in reversed(self.scopes):
+            if name in scope:
+                scope[name] = value
+                return
+        self.scopes[0][name] = value
 
     def run(self, program):
         code = [normalize(instr) for instr in program]
@@ -43,76 +58,99 @@ class StackMachine:
                 raise StackMachineError(f"unknown label {arg} at {op}")
             return labels[arg]
 
-        pc = 0
-        while pc < len(code):
-            op, arg = code[pc]
-            pc += 1
+        try:
+            pc = 0
+            while pc < len(code):
+                op, arg = code[pc]
+                pc += 1
 
-            if op == "LABEL":
-                continue
-            elif op == "CONST":
-                self.stack.append(int(arg))
-            elif op == "LD":
-                if arg not in self.state:
-                    raise StackMachineError(f"undefined variable {arg}")
-                self.stack.append(self.state[arg])
-            elif op == "ST":
-                self.state[arg] = self.pop(op)
-            elif op == "READ":
-                if self.pos >= len(self.inputs):
-                    raise StackMachineError("input is exhausted")
-                self.stack.append(self.inputs[self.pos])
-                self.pos += 1
-            elif op == "WRITE":
-                self.output.append(format_value(self.pop(op)))
-            elif op == "BINOP":
-                if arg not in BINOPS:
-                    raise StackMachineError(f"unknown operator {arg}")
-                right = self.pop(op)
-                left = self.pop(op)
-                if arg in ARITH_OPS:
-                    check_int(right)
-                    check_int(left)
-                self.stack.append(BINOPS[arg](left, right))
-            elif op == "ARRAY":
-                size = int(arg)
-                if size > len(self.stack):
-                    raise StackMachineError(f"stack underflow at {op}")
-                items = self.stack[len(self.stack) - size:]
-                del self.stack[len(self.stack) - size:]
-                self.stack.append(items)
-            elif op == "STRING":
-                self.stack.append(String(map(ord, arg)))
-            elif op == "SEXP":
-                name, size = arg
-                size = int(size)
-                if size < 0 or size > len(self.stack):
-                    raise StackMachineError(f"stack underflow at {op}")
-                start = len(self.stack) - size
-                args = self.stack[start:]
-                del self.stack[start:]
-                self.stack.append(Sexp(name, args))
-            elif op == "LENGTH":
-                self.stack.append(len(check_array(self.pop(op))))
-            elif op == "ELEM":
-                index = self.pop(op)
-                array = check_array(self.pop(op))
-                self.stack.append(array[check_index(array, index)])
-            elif op == "SET":
-                value = self.pop(op)
-                index = self.pop(op)
-                array = check_array(self.pop(op))
-                array[check_index(array, index)] = value
-            elif op == "JMP":
-                pc = target(arg, op)
-            elif op == "JZ":
-                if self.pop(op) == 0:
+                if op == "LABEL":
+                    continue
+                elif op == "CONST":
+                    self.stack.append(int(arg))
+                elif op == "LD":
+                    self.stack.append(self.load(arg))
+                elif op == "ST":
+                    self.store(arg, self.pop(op))
+                elif op == "READ":
+                    if self.pos >= len(self.inputs):
+                        raise StackMachineError("input is exhausted")
+                    self.stack.append(self.inputs[self.pos])
+                    self.pos += 1
+                elif op == "WRITE":
+                    self.output.append(format_value(self.pop(op)))
+                elif op == "BINOP":
+                    if arg not in BINOPS:
+                        raise StackMachineError(f"unknown operator {arg}")
+                    right = self.pop(op)
+                    left = self.pop(op)
+                    if arg in ARITH_OPS:
+                        check_int(right)
+                        check_int(left)
+                    self.stack.append(BINOPS[arg](left, right))
+                elif op == "ARRAY":
+                    size = int(arg)
+                    if size > len(self.stack):
+                        raise StackMachineError(f"stack underflow at {op}")
+                    items = self.stack[len(self.stack) - size:]
+                    del self.stack[len(self.stack) - size:]
+                    self.stack.append(items)
+                elif op == "STRING":
+                    self.stack.append(String(map(ord, arg)))
+                elif op == "SEXP":
+                    name, size = arg
+                    size = int(size)
+                    if size < 0 or size > len(self.stack):
+                        raise StackMachineError(f"stack underflow at {op}")
+                    start = len(self.stack) - size
+                    args = self.stack[start:]
+                    del self.stack[start:]
+                    self.stack.append(Sexp(name, args))
+                elif op == "LENGTH":
+                    self.stack.append(len(get_items(self.pop(op))))
+                elif op == "ELEM":
+                    index = self.pop(op)
+                    array = get_items(self.pop(op))
+                    self.stack.append(array[check_index(array, index)])
+                elif op == "SET":
+                    value = self.pop(op)
+                    index = self.pop(op)
+                    array = check_array(self.pop(op))
+                    array[check_index(array, index)] = value
+                elif op == "DUP":
+                    value = self.pop(op)
+                    self.stack.extend([value, value])
+                elif op == "DROP":
+                    self.pop(op)
+                elif op == "PATT":
+                    self.stack.append(int(match_type(arg, self.pop(op))))
+                elif op == "SCOPE":
+                    self.pending_scopes.append(self.scopes)
+                    self.scopes = [{}]
+                elif op == "ENTER":
+                    if not self.pending_scopes or len(self.scopes) != 1:
+                        raise StackMachineError("ENTER without SCOPE")
+                    local = self.scopes[0]
+                    self.scopes = self.pending_scopes.pop() + [local]
+                elif op == "LEAVE":
+                    if len(self.scopes) == 1:
+                        raise StackMachineError("LEAVE without ENTER")
+                    self.scopes.pop()
+                elif op == "MF":
+                    raise StackMachineError(f"match failure on {format_value(self.pop(op))}")
+                elif op == "JMP":
                     pc = target(arg, op)
-            elif op == "JNZ":
-                if self.pop(op) != 0:
-                    pc = target(arg, op)
-            else:
-                raise StackMachineError(f"unknown instruction {op}")
+                elif op == "JZ":
+                    if self.pop(op) == 0:
+                        pc = target(arg, op)
+                elif op == "JNZ":
+                    if self.pop(op) != 0:
+                        pc = target(arg, op)
+                else:
+                    raise StackMachineError(f"unknown instruction {op}")
+        finally:
+            self.scopes = [self.state]
+            self.pending_scopes.clear()
 
 
 def main():

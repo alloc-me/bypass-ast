@@ -35,6 +35,67 @@ class Compiler:
             return self.expr(expression["length"]) + ["LENGTH"]
         return self.expr(expression["left"]) + self.expr(expression["right"]) + [{"BINOP": expression["binop"]}]
 
+    def pattern_failure(self, depth, failures, next_branch):
+        if depth == 0:
+            return next_branch
+        if depth not in failures:
+            failures[depth] = self.label("pattern_drop")
+        return failures[depth]
+
+    def pattern(self, pattern, failures, next_branch, depth=1):
+        if isinstance(pattern, int):
+            fail = self.pattern_failure(depth - 1, failures, next_branch)
+            return [{"CONST": pattern}, {"BINOP": "=="}, {"JZ": fail}]
+        if isinstance(pattern, str):
+            if pattern in ("#int", "#array", "#string", "#sexp"):
+                fail = self.pattern_failure(depth - 1, failures, next_branch)
+                return [{"PATT": pattern}, {"JZ": fail}]
+            type_fail = self.pattern_failure(depth, failures, next_branch)
+            value_fail = self.pattern_failure(depth - 1, failures, next_branch)
+            return ["DUP", {"PATT": "#string"}, {"JZ": type_fail},
+                    {"STRING": pattern}, {"BINOP": "=="}, {"JZ": value_fail}]
+        if not isinstance(pattern, dict):
+            raise CompilerError(f"unknown pattern: {pattern!r}")
+        if "wildcard" in pattern:
+            return ["DROP"]
+        if "bind" in pattern:
+            return self.pattern(pattern["bind"]["pattern"], failures, next_branch, depth)
+        fail = self.pattern_failure(depth, failures, next_branch)
+        if "array" in pattern:
+            parts = pattern["array"]
+            code = ["DUP", {"PATT": "#array"}, {"JZ": fail},
+                    "DUP", "LENGTH", {"CONST": len(parts)}, {"BINOP": "=="}, {"JZ": fail}]
+        elif "sexp" in pattern:
+            parts = pattern["args"]
+            code = ["DUP", {"PATT": ["Tag", pattern["sexp"], len(parts)]}, {"JZ": fail}]
+        else:
+            raise CompilerError(f"unknown pattern: {pattern!r}")
+        for index, part in enumerate(parts):
+            code += ["DUP", {"CONST": index}, "ELEM"]
+            code += self.pattern(part, failures, next_branch, depth + 1)
+        return code + ["DROP"]
+
+    def pattern_bindings(self, pattern, path=()):
+        if not isinstance(pattern, dict):
+            return []
+        if "bind" in pattern:
+            binding = pattern["bind"]
+            code = self.pattern_bindings(binding["pattern"], path)
+            code += [{"LD": "_"}]
+            for index in path:
+                code += [{"CONST": index}, "ELEM"]
+            return code + [{"ST": binding["name"]}]
+        if "array" in pattern:
+            parts = pattern["array"]
+        elif "sexp" in pattern:
+            parts = pattern["args"]
+        else:
+            return []
+        code = []
+        for index, part in enumerate(parts):
+            code += self.pattern_bindings(part, path + (index,))
+        return code
+
     def stmt(self, statement):
         if statement == "skip":
             return []
@@ -83,7 +144,20 @@ class Compiler:
                     + [{"JNZ": body}])
 
         if kind == "switch":
-            raise CompilerError("switch is only supported by the AST interpreter")
+            end = self.label("switch_end")
+            code = self.expr(arg["scrutinee"])
+            for branch in arg["branches"]:
+                next_branch = self.label("next_pattern")
+                failures = {}
+                code += ["DUP"] + self.pattern(branch["pattern"], failures, next_branch)
+                code += ["SCOPE", {"ST": "_"}]
+                code += self.pattern_bindings(branch["pattern"])
+                code += ["ENTER"] + self.stmt(branch["branch"])
+                code += ["LEAVE", {"JMP": end}]
+                for depth, label in failures.items():
+                    code += [{"LABEL": label}] + ["DROP"] * depth + [{"JMP": next_branch}]
+                code += [{"LABEL": next_branch}]
+            return code + ["MF", {"LABEL": end}]
 
         raise CompilerError(f"unknown statement {kind!r}")
 
